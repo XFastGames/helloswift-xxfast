@@ -14,8 +14,17 @@
 
 import Foundation
 
-var name:String = readLine() ?? "Chris"
-print(name)
+print("What's your name? \t:")
+var input:String = readLine() ?? "isuru"
+if(input == "isuru"){
+    print("Awesome name!")
+}else{
+    print("\(input) is a ", terminator:"")
+    for _ in 1...99 {
+        print("silly, ", terminator:"")
+    }
+    print("silly name")
+}
 
 /*:
  ### 1.2 Packaging your data
@@ -32,13 +41,30 @@ struct Profile {
 }
 
 func validate(firstName: String, lastName:String, age:Int?) -> Profile? {
-    // TODO
-    // 1. add a guard to check if the age is not optional
-    // 2. add a guard to check if the age is in range
-    // 3. wrap the collected data in the struct and return
-    return nil
+    guard let providedAge = age else {
+        print("No age is provided")
+        return nil
+    }
+    guard providedAge >= 18, providedAge < 999 else {
+        print("Age is not in the required range")
+        return nil
+    }
+    
+    return Profile(firstName: firstName, lastName: lastName, age: providedAge)
 }
 
+print("What's your last name? \t:")
+var lastName:String = readLine() ?? ""
+print("What's your age? \t:")
+var ageString:String = readLine() ?? ""
+var age: Int? = Int(ageString)
+let profile = validate(firstName: input, lastName: lastName, age: age)
+
+if let validProfile = profile {
+    print(validProfile)
+} else {
+    print("invalid profile")
+}
 
 /*:
  ## Task 2 Schrodinger's Cat 😼
@@ -80,11 +106,38 @@ protocol Bunker {
 }
 
 func checkIfTheCatIsAlive(cat: Cat) {
-    // TODO: if the cat is alive, print "Its alive!!! 😸"
-    // TODO: if the cat is dead, print "Oh no 😿"
-    // TODO: if the cat is neither alive nor dead, print "Its cat-tum superposition! 🤷‍♂️😼"
+    if let isTheCatAlive = cat.isAlive {
+        if(isTheCatAlive){
+            print("Its alive!!! 😸")
+        } else {
+            print("Oh no 😿")
+        }
+    } else {
+        print("Its cat-tum superposition! 🤷‍♂️😼")
+    }
 }
 
+class TNT : Explosive {
+    func detonate() -> Bool {
+        return arc4random_uniform(2) == 0
+    }
+}
+
+class QuantumBunker : Bunker {
+    
+    var occupent: Cat
+    var explosive: Explosive
+    
+    required init(occupent: Cat, explosive: Explosive) {
+        self.occupent = occupent
+        self.occupent.isAlive = nil
+        self.explosive = explosive
+    }
+    
+    func open() {
+        occupent.isAlive = !explosive.detonate()
+    }
+}
 
 /*:
  ### 2.2 Run the experiment
@@ -102,6 +155,13 @@ func checkIfTheCatIsAlive(cat: Cat) {
  * if the cat is dead, print `Oh no :(`
  - Note:  at this point, the cat should be either alive or dead; but not both
  */
+
+let cat = Cat(name: "jellie", isAlive: true)
+let tnt = TNT()
+let bunker = QuantumBunker(occupent: cat, explosive: tnt)
+checkIfTheCatIsAlive(cat: bunker.occupent)
+bunker.open()
+checkIfTheCatIsAlive(cat: bunker.occupent)
 
 /*:
  ### 2.3 Tweaking the Experiment
@@ -121,3 +181,29 @@ protocol DangerousBunker {
 }
 
 //: - Note: Extra points if made use of higher order functions such as `.map` and `.reduce` to make the `open()` function as *functional* as possible
+
+class DangerousQuantumBunker : DangerousBunker {
+    
+    required init(occupent: Cat, explosives: [Explosive]) {
+        self.occupent = occupent
+        self.occupent.isAlive = nil
+        self.explosives = explosives
+    }
+    
+    var occupent: Cat
+    var explosives: [Explosive]
+    
+    func open() {
+        occupent.isAlive = explosives
+            .map { (explosive) -> Bool in explosive.detonate() }
+            .reduce(true, { (result, outcome) -> Bool in
+                result && !outcome
+            })
+    }
+}
+
+let tnts = [tnt, TNT(),TNT()]
+let dangerousbunker = DangerousQuantumBunker(occupent: cat, explosives: [tnt])
+checkIfTheCatIsAlive(cat: dangerousbunker.occupent)
+dangerousbunker.open()
+checkIfTheCatIsAlive(cat: dangerousbunker.occupent)
